@@ -125,6 +125,13 @@ public class SCIClient {
 	 * Extra query string to send with each request.
 	 */
 	private String extraQuery = null;
+	/**
+	 * Flag to indicate if the response contains extended information.
+	 * If false, a URL String is returned corresponding to the selected view value
+	 * If true, extended information is returned in a JSON format that can includes
+	 * a categorised breakdown of scores and priorities (if applicable).
+	 */
+	private boolean extendedReponse = false;
 
 	/**
 	 * Construct an SCIClient object with the specified licence key, and default
@@ -354,6 +361,28 @@ public class SCIClient {
 	public String getExtraQuery() {
 		return extraQuery;
 	}
+	
+	/**
+	 * Sets a flag to indicate if the response contains extended information.
+	 * If false, a URL String is returned corresponding to the selected view value
+	 * If true, extended information is returned in a JSON format that can includes
+	 * a categorised breakdown of scores and priorities (if applicable).
+	 *  
+	 * @param extendedReponse
+	 *            true or false
+	 */	
+	public void setExtendedReponse(boolean extendedReponse) {
+		this.extendedReponse = extendedReponse;
+	}
+	
+	/**
+	 * Get the flag that indicates if a simple or extended response will be returned.
+	 * 
+	 * @return true or false.
+	 */
+	public boolean getExtendedReponse() {
+		return this.extendedReponse;
+	}
 
 	/**
 	 * Perform a Sitemorse test of the specified URL. Only the specific host
@@ -513,6 +542,7 @@ public class SCIClient {
 			jsonreq.put("url", url);
 			jsonreq.put("hostNames", hostNames);
 			jsonreq.put("view", view);
+			if (this.extendedReponse) jsonreq.put("extendedResponse", "true");
 			line = jsonreq.toString();
 			sciOut.write(line.length() + CRLF + line);
 			sciOut.flush();
@@ -632,8 +662,11 @@ public class SCIClient {
 					/* no-op (timeout prevention), do nothing */
 					continue;
 				} else if (line.startsWith("XSCI-COMPLETE ")) {
-					/* Test is complete, return the parameter as our result */
-					return line.substring(14);
+					/* Test is complete, return the simple or extended response */
+					if (!this.extendedReponse)
+						return line.substring(14);
+					else
+						return ReadExtendedJson(line.substring(14), sciIn);
 				} else if (line.startsWith("XSCI-ERROR ")) {
 					/* Fatal error, throw the parameter as an exception */
 					throw new SCIServerError(line.substring(11));
@@ -851,7 +884,47 @@ public class SCIClient {
 			throw new SCIException(e);
 		}
 	}
+	/**
+	 * Reads the extended JSON data block and include the URL in the JSON returned
+	 *  
+	 * @param Url
+	 * 			The URL corresponding to the requested view
+	 * @param input
+	 * 			The BufferedReader containing the extended JSON data
+	 * @return
+	 * 			A String containing the JSON
+	 * @throws SCIException
+	 */
+	private String ReadExtendedJson(String Url, BufferedReader input) throws SCIException {
+		String line = new String();
+		StringBuffer jsonIn = new StringBuffer();
+		int readCount = 0;
+		char[] buf = new char[4096];
+		StringBuilder data = new StringBuilder();
+		try {
+			line = input.readLine(); // Content-Type
+			line = input.readLine().substring(16); // Content-Length
+			int contentLength = Integer.valueOf(line);
+			line = input.readLine(); // Empty Line
+	
+			int i = 0;
+			while (readCount < contentLength) {
+				i = input.read(buf);
+				readCount += i;
+				if ( i == -1 )
+					break;
+				data.append(buf, 0, i);
+			}
+			
+			JSONObject jsonResponse = new JSONObject(data.toString());
+			jsonResponse.put("url", Url);
+			return jsonResponse.toString();
 
+		} catch (IOException | JSONException e) {
+			throw new SCIException(e);
+		}
+	}
+	
 	/**
 	 * Reads a set of RFC 822-style headers from a stream. If the socket and a
 	 * time-out are also provided, it will ensure that the entire operation
@@ -916,6 +989,8 @@ public class SCIClient {
 		System.out.println("Creating SCIClient using key: " + args[0]);
 		SCIClient client = new SCIClient(args[0]);
 		System.out.println("Testing page " + args[1]);
+		System.out.println("Setting extended response");
+		client.setExtendedReponse(true);
 		try {
 			System.out.println(client.performTest(args[1]));
 		} catch (SCIException e) {
