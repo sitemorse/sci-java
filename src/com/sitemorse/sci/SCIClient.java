@@ -131,7 +131,7 @@ public class SCIClient {
 	 * If true, extended information is returned in a JSON format that can includes
 	 * a categorised breakdown of scores and priorities (if applicable).
 	 */
-	private boolean extendedReponse = false;
+	private boolean extendedResponse = false;
 
 	/**
 	 * Construct an SCIClient object with the specified licence key, and default
@@ -368,11 +368,11 @@ public class SCIClient {
 	 * If true, extended information is returned in a JSON format that can includes
 	 * a categorised breakdown of scores and priorities (if applicable).
 	 *  
-	 * @param extendedReponse
+	 * @param extendedResponse
 	 *            true or false
 	 */	
-	public void setExtendedReponse(boolean extendedReponse) {
-		this.extendedReponse = extendedReponse;
+	public void setExtendedResponse(boolean extendedResponse) {
+		this.extendedResponse = extendedResponse;
 	}
 	
 	/**
@@ -380,8 +380,8 @@ public class SCIClient {
 	 * 
 	 * @return true or false.
 	 */
-	public boolean getExtendedReponse() {
-		return this.extendedReponse;
+	public boolean getExtendedResponse() {
+		return this.extendedResponse;
 	}
 
 	/**
@@ -504,10 +504,6 @@ public class SCIClient {
 					sock = ((SSLSocketFactory) SSLSocketFactory.getDefault())
 							.createSocket(sock, getServerHostname(),
 									getServerPort(), true);
-					sciIn = new BufferedReader(new InputStreamReader(
-							sock.getInputStream(), SCI_CHARSET));
-					sciOut = new BufferedWriter(new OutputStreamWriter(
-							sock.getOutputStream(), SCI_CHARSET));
 				}
 			} else {
 				if (serverSecure)
@@ -542,7 +538,8 @@ public class SCIClient {
 			jsonreq.put("url", url);
 			jsonreq.put("hostNames", hostNames);
 			jsonreq.put("view", view);
-			if (this.extendedReponse) jsonreq.put("extendedResponse", "true");
+			if (this.extendedResponse)
+                            jsonreq.put("extendedResponse", true);
 			line = jsonreq.toString();
 			sciOut.write(line.length() + CRLF + line);
 			sciOut.flush();
@@ -648,6 +645,7 @@ public class SCIClient {
 		BufferedWriter webOut;
 		String status;
 		String path;
+                String body;
 		StringBuilder data;
 		char[] buf = new char[BUFFER_SIZE];
 
@@ -663,10 +661,14 @@ public class SCIClient {
 					continue;
 				} else if (line.startsWith("XSCI-COMPLETE ")) {
 					/* Test is complete, return the simple or extended response */
-					if (!this.extendedReponse)
+					if (!this.extendedResponse)
 						return line.substring(14);
-					else
-						return ReadExtendedJson(line.substring(14), sciIn);
+                                        headers = ReadHeaders(null, sciIn, 0);
+                                        body = ReadBody(headers, sciIn);
+                                        if (body == null)
+                                                throw new SCIException(
+                                                        "Extended response headers missing Content-Length");
+                                        return body;
 				} else if (line.startsWith("XSCI-ERROR ")) {
 					/* Fatal error, throw the parameter as an exception */
 					throw new SCIServerError(line.substring(11));
@@ -688,26 +690,7 @@ public class SCIClient {
 							+ httpVersion);
 				url = new URL(line.substring(method.length() + 1, i));
 				headers = ReadHeaders(null, sciIn, 0);
-				/* If there was a Content-Length header, read a body too. */
-				data = null;
-				for (i = 0; i < headers.size(); i++) {
-					if (headers.get(i).toLowerCase()
-							.startsWith("content-length:")) {
-						clen = Integer.parseInt(headers.get(i).substring(16));
-						data = new StringBuilder(clen);
-						while (clen > 0) {
-							i = sciIn.read(buf, 0,
-									clen > BUFFER_SIZE ? BUFFER_SIZE : clen);
-							if (i == -1)
-								throw new SCIException("SCI server "
-										+ " disconnected while sending"
-										+ " HTTP body");
-							data.append(buf, 0, i);
-							clen -= i;
-						}
-						break;
-					}
-				}
+                                body = ReadBody(headers, sciIn);
 
 				/* Security checks on the request */
 				if (method.equals("POST") && !postAllowed) {
@@ -791,8 +774,8 @@ public class SCIClient {
 							webOut.write(extraHeaders[i] + CRLF);
 					}
 					webOut.write(CRLF);
-					if (data != null)
-						webOut.write(data.toString());
+					if (body != null)
+						webOut.write(body);
 					webOut.flush();
 
 					/*
@@ -884,48 +867,8 @@ public class SCIClient {
 			throw new SCIException(e);
 		}
 	}
-	/**
-	 * Reads the extended JSON data block and include the URL in the JSON returned
-	 *  
-	 * @param Url
-	 * 			The URL corresponding to the requested view
-	 * @param input
-	 * 			The BufferedReader containing the extended JSON data
-	 * @return
-	 * 			A String containing the JSON
-	 * @throws SCIException
-	 */
-	private String ReadExtendedJson(String Url, BufferedReader input) throws SCIException {
-		String line = new String();
-		StringBuffer jsonIn = new StringBuffer();
-		int readCount = 0;
-		char[] buf = new char[4096];
-		StringBuilder data = new StringBuilder();
-		try {
-			line = input.readLine(); // Content-Type
-			line = input.readLine().substring(16); // Content-Length
-			int contentLength = Integer.valueOf(line);
-			line = input.readLine(); // Empty Line
-	
-			int i = 0;
-			while (readCount < contentLength) {
-				i = input.read(buf);
-				readCount += i;
-				if ( i == -1 )
-					break;
-				data.append(buf, 0, i);
-			}
-			
-			JSONObject jsonResponse = new JSONObject(data.toString());
-			jsonResponse.put("url", Url);
-			return jsonResponse.toString();
 
-		} catch (IOException | JSONException e) {
-			throw new SCIException(e);
-		}
-	}
-	
-	/**
+        /**
 	 * Reads a set of RFC 822-style headers from a stream. If the socket and a
 	 * time-out are also provided, it will ensure that the entire operation
 	 * takes place within that time-out - otherwise, socket may be null and the
@@ -977,6 +920,46 @@ public class SCIClient {
 		}
 	}
 
+        /**
+	 * Reads a message body from a stream. If the given headers contain
+         * a Content-Length header, read that many bytes and return them as
+         * a string. If there is no Content-Length, return null.
+	 *
+         * @param headers
+         *            The array of RFC822-style headers.
+	 * @param in
+	 *            The stream to read the data from.
+	 * @return The body string, or null if there was no Content-Length.
+	 * @throws IOException, SCIException
+	 */
+        private String ReadBody(ArrayList<String> headers, BufferedReader in)
+                        throws IOException, SCIException {
+                StringBuilder data;
+                int i;
+                int clen;
+                char[] buf = new char[BUFFER_SIZE];
+
+                for (i = 0; i < headers.size(); i++) {
+                        if (headers.get(i).toLowerCase()
+                                        .startsWith("content-length:")) {
+                                clen = Integer.parseInt(headers.get(i).substring(16));
+                                data = new StringBuilder(clen);
+                                while (clen > 0) {
+                                        i = in.read(buf, 0,
+                                                        clen > BUFFER_SIZE ? BUFFER_SIZE : clen);
+                                        if (i == -1)
+                                                throw new SCIException("SCI server "
+                                                        + " disconnected while sending"
+                                                        + " HTTP body");
+                                        data.append(buf, 0, i);
+                                        clen -= i;
+                                }
+                                return data.toString();
+                        }
+		}
+                return null;
+        }
+
 	/**
 	 * A test method which allows us to execute this class as an application to
 	 * see it in action.
@@ -990,7 +973,7 @@ public class SCIClient {
 		SCIClient client = new SCIClient(args[0]);
 		System.out.println("Testing page " + args[1]);
 		System.out.println("Setting extended response");
-		client.setExtendedReponse(true);
+		client.setExtendedResponse(true);
 		try {
 			System.out.println(client.performTest(args[1]));
 		} catch (SCIException e) {
