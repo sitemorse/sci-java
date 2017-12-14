@@ -343,7 +343,7 @@ public class SCIClient {
 	/**
 	 * Sets an extra query string to be sent with each request that is proxied
 	 * through this class. The string should be simply the extra parameter(s) to
-	 * send, with no "?" or trailing or leading "&" (e.g. "a=b" or "a=b&c=d").
+	 * send, with no "?" or trailing or leading "&amp;" (e.g. "a=b" or "a=b&amp;c=d").
 	 * 
 	 * @param extraQuery
 	 *            the extra query string to send, or null to send none
@@ -393,7 +393,7 @@ public class SCIClient {
 	 * @param url
 	 *            The URL to test.
 	 * @return The URL of the finished report to display to the user.
-	 * @throws SCIException
+	 * @throws SCIException if an error occurs
 	 */
 	public String performTest(String url) throws SCIException {
 		return performTest(url, "snapshot-page");
@@ -411,7 +411,7 @@ public class SCIClient {
 	 *            complete. This must be one of "report", "snapshot-page" or
 	 *            "snapshot-source".
 	 * @return The URL of the finished report to display to the user.
-	 * @throws SCIException
+	 * @throws SCIException if an error occurs
 	 */
 	public String performTest(String url, String view) throws SCIException {
 		String[] hostNames = new String[1];
@@ -437,7 +437,7 @@ public class SCIClient {
 	 * @param hostNames
 	 *            An array of host names to proxy.
 	 * @return The URL of the finished report to display to the user.
-	 * @throws SCIException
+	 * @throws SCIException if an error occurs
 	 */
 	public String performTest(String url, String[] hostNames)
 			throws SCIException {
@@ -458,7 +458,7 @@ public class SCIClient {
 	 *            complete. This must be one of "report", "snapshot-page" or
 	 *            "snapshot-source".
 	 * @return The URL of the finished report to display to the user.
-	 * @throws SCIException
+	 * @throws SCIException if an error occurs
 	 */
 	public String performTest(String url, String[] hostNames, String view)
 			throws SCIException {
@@ -573,7 +573,7 @@ public class SCIClient {
 	 * @param challenge
 	 *            Challenge string from server.
 	 * @return Authentication response string.
-	 * @throws SCIException
+	 * @throws SCIException if an error occurs
 	 */
 	private String GenerateAuthResponse(String challenge) throws SCIException {
 		try {
@@ -625,7 +625,7 @@ public class SCIClient {
 	 * @param hostNames
 	 *            The collection of host names we will proxy for.
 	 * @return The URL of the finished report to display to the user.
-	 * @throws SCIException
+	 * @throws SCIException if an error occurs
 	 */
 	private String ProxyRequests(BufferedReader sciIn, BufferedWriter sciOut,
 			String[] hostNames) throws SCIException {
@@ -882,7 +882,7 @@ public class SCIClient {
 	 * @param timeout
 	 *            The time-out in milliseconds, or zero for no time-out.
 	 * @return An array of header strings.
-	 * @throws IOException
+	 * @throws IOException if an error occurs
 	 */
 	private ArrayList<String> ReadHeaders(Socket sock, BufferedReader in,
 			int timeout) throws IOException {
@@ -930,7 +930,8 @@ public class SCIClient {
 	 * @param in
 	 *            The stream to read the data from.
 	 * @return The body string, or null if there was no Content-Length.
-	 * @throws IOException, SCIException
+	 * @throws IOException if an input/output error occurs
+         * @throws SCIException if the connection closes prematurely
 	 */
         private String ReadBody(ArrayList<String> headers, BufferedReader in)
                         throws IOException, SCIException {
