@@ -21,10 +21,8 @@ import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.net.ssl.SSLSocketFactory;
@@ -33,7 +31,7 @@ import javax.net.ssl.SSLSocketFactory;
  * Implement the Sitemorse CMS Integration (SCI) Client protocol.
  * 
  * @author Sitemorse (UK Sales) Ltd
- * @version 1.1.4
+ * @version 1.2
  */
 public class SCIClient {
 	/**
@@ -539,8 +537,11 @@ public class SCIClient {
 			jsonreq.put("hostNames", hostNames);
 			jsonreq.put("view", view);
 			if (this.extendedResponse)
-                            jsonreq.put("extendedResponse", true);
+                jsonreq.put("extendedResponse", true);
+			if (1==1)
+                jsonreq.put("pagesList", true);
 			line = jsonreq.toString();
+			System.out.println( "Sending: " + line );
 			sciOut.write(line.length() + CRLF + line);
 			sciOut.flush();
 			line = sciIn.readLine();
@@ -972,11 +973,16 @@ public class SCIClient {
 		System.out.println("Testing SCI");
 		System.out.println("Creating SCIClient using key: " + args[0]);
 		SCIClient client = new SCIClient(args[0]);
+		
+		//	single page test
 		System.out.println("Testing page " + args[1]);
 		System.out.println("Setting extended response");
 		client.setExtendedResponse(true);
+		
+		
+			
 		try {
-			System.out.println(client.performTest(args[1]));
+			System.out.println(client.performTest("http://localhost/ac/pages.json","report"));
 		} catch (SCIException e) {
 			e.printStackTrace();
 		}
