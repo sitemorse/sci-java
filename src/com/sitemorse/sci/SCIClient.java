@@ -538,10 +538,7 @@ public class SCIClient {
 			jsonreq.put("view", view);
 			if (this.extendedResponse)
                 jsonreq.put("extendedResponse", true);
-			if (1==1)
-                jsonreq.put("pagesList", true);
 			line = jsonreq.toString();
-			System.out.println( "Sending: " + line );
 			sciOut.write(line.length() + CRLF + line);
 			sciOut.flush();
 			line = sciIn.readLine();
@@ -974,15 +971,11 @@ public class SCIClient {
 		System.out.println("Creating SCIClient using key: " + args[0]);
 		SCIClient client = new SCIClient(args[0]);
 		
-		//	single page test
 		System.out.println("Testing page " + args[1]);
 		System.out.println("Setting extended response");
 		client.setExtendedResponse(true);
-		
-		
-			
 		try {
-			System.out.println(client.performTest("http://localhost/ac/pages.json","report"));
+			System.out.println(client.performTest(args[1]));
 		} catch (SCIException e) {
 			e.printStackTrace();
 		}
