@@ -31,7 +31,7 @@ import javax.net.ssl.SSLSocketFactory;
  * Implement the Sitemorse CMS Integration (SCI) Client protocol.
  * 
  * @author Sitemorse (UK Sales) Ltd
- * @version 1.2
+ * @version 1.2.1
  */
 public class SCIClient {
 	/**
@@ -130,6 +130,12 @@ public class SCIClient {
 	 * a categorised breakdown of scores and priorities (if applicable).
 	 */
 	private boolean extendedResponse = false;
+	
+	/**
+	 * Flag to indicate if the test is restricted to parts of the page marked
+	 * by <!-- sitemorse:content --> tags
+	 */
+	private boolean testContent = false;
 
 	/**
 	 * Construct an SCIClient object with the specified licence key, and default
@@ -368,7 +374,7 @@ public class SCIClient {
 	 *  
 	 * @param extendedResponse
 	 *            true or false
-	 */	
+	 */
 	public void setExtendedResponse(boolean extendedResponse) {
 		this.extendedResponse = extendedResponse;
 	}
@@ -380,6 +386,27 @@ public class SCIClient {
 	 */
 	public boolean getExtendedResponse() {
 		return this.extendedResponse;
+	}
+
+	/**
+	 * Sets a flag to indicate if the test is restricted to parts of the page marked
+	 * by <!-- sitemorse:content --> tags
+	 *  
+	 * @param testContent
+	 *            true or false
+	 */	
+	public void setTestContent(boolean testContent) {
+		this.testContent = testContent;
+	}
+	
+	/**
+	 * Get the flag that indicates if the test is restricted to parts of the page marked
+	 * by <!-- sitemorse:content --> tags
+	 * 
+	 * @return true or false.
+	 */
+	public boolean getTestContent() {
+		return this.testContent;
 	}
 
 	/**
@@ -517,6 +544,7 @@ public class SCIClient {
 			sciOut = new BufferedWriter(new OutputStreamWriter(
 					sock.getOutputStream(), SCI_CHARSET));
 			line = sciIn.readLine();
+			
 			if (line == null)
 				throw new SCIException("SCI server immediately disconnected");
 			if (line.length() < 16 || !line.substring(0, 4).equals("SCI:"))
@@ -538,6 +566,8 @@ public class SCIClient {
 			jsonreq.put("view", view);
 			if (this.extendedResponse)
                 jsonreq.put("extendedResponse", true);
+			if (this.testContent)
+                jsonreq.put("testContent", true);
 			line = jsonreq.toString();
 			sciOut.write(line.length() + CRLF + line);
 			sciOut.flush();
@@ -635,7 +665,6 @@ public class SCIClient {
 		int i;
 		long timetarget;
 		long now;
-		int clen;
 		long starttime;
 		long resptime;
 		long endtime;
@@ -972,10 +1001,10 @@ public class SCIClient {
 		SCIClient client = new SCIClient(args[0]);
 		
 		System.out.println("Testing page " + args[1]);
-		System.out.println("Setting extended response");
-		client.setExtendedResponse(true);
+		// client.setExtendedResponse(true);
+		// client.setTestContent(true);
 		try {
-			System.out.println(client.performTest(args[1]));
+			System.out.println(client.performTest(args[1], "snapshot-page")); // "snapshot-page" "snapshot-source" "report"
 		} catch (SCIException e) {
 			e.printStackTrace();
 		}
