@@ -418,7 +418,7 @@ public class SCIClient {
 	/**
 	 * Get the User identifier used with non-legacy licence keys
 	 *
-	 * @return UserID
+	 * @return user
 	 */
 	public String getUser() {
 		return this.user;
@@ -427,7 +427,7 @@ public class SCIClient {
 	/**
 	 * Sets User identifier used with non-legacy licence keys
 	 *
-	 * @param UserID
+	 * @param user
 	 *
 	 */
 	public void setUser(String user) {
