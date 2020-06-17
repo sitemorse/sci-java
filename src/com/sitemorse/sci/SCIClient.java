@@ -1,6 +1,6 @@
 /*
  * Copyright 2017 Sitemorse (UK Sales) Ltd All rights reserved.
- * 
+ *
  */
 
 package com.sitemorse.sci;
@@ -29,9 +29,9 @@ import javax.net.ssl.SSLSocketFactory;
 
 /**
  * Implement the Sitemorse CMS Integration (SCI) Client protocol.
- * 
+ *
  * @author Sitemorse (UK Sales) Ltd
- * @version 1.2.1
+ * @version 1.3.0
  */
 public class SCIClient {
 	/**
@@ -130,7 +130,7 @@ public class SCIClient {
 	 * a categorised breakdown of scores and priorities (if applicable).
 	 */
 	private boolean extendedResponse = false;
-	
+
 	/**
 	 * Flag to indicate if the test is restricted to parts of the page marked
 	 * by <!-- sitemorse:content --> tags
@@ -138,9 +138,15 @@ public class SCIClient {
 	private boolean testContent = false;
 
 	/**
+	 * User identifier string used with non-legacy license keys
+	 * typically, this is a unique identifier for a CMS editor
+	 */
+	private String user = "";
+
+	/**
 	 * Construct an SCIClient object with the specified licence key, and default
 	 * connection parameters.
-	 * 
+	 *
 	 * @param licenceKey
 	 *            The SCI licence key.
 	 */
@@ -151,7 +157,7 @@ public class SCIClient {
 	/**
 	 * Construct an SCIClient object with the specified licence key, using the
 	 * specified host name to connect to the SCI server.
-	 * 
+	 *
 	 * @param licenceKey
 	 *            The SCI licence key.
 	 * @param serverHostname
@@ -165,7 +171,7 @@ public class SCIClient {
 	/**
 	 * Construct an SCIClient object with the specified licence key, using the
 	 * specified host name and port to connect to the SCI server.
-	 * 
+	 *
 	 * @param licenceKey
 	 *            The SCI licence key.
 	 * @param serverHostname
@@ -183,7 +189,7 @@ public class SCIClient {
 	 * Construct an SCIClient object with the specified licence key, using the
 	 * specified host name and port to connect to the SCI server, and setting
 	 * whether or not to use SSL to connect.
-	 * 
+	 *
 	 * @param licenceKey
 	 *            The SCI licence key.
 	 * @param serverHostname
@@ -203,7 +209,7 @@ public class SCIClient {
 
 	/**
 	 * Get the host name used when connecting to the SCI server.
-	 * 
+	 *
 	 * @return The host name used to connect to the SCI server.
 	 */
 	public String getServerHostname() {
@@ -212,7 +218,7 @@ public class SCIClient {
 
 	/**
 	 * Set the host name of the SCI server.
-	 * 
+	 *
 	 * @param serverHostname
 	 *            The host name of the SCI server.
 	 */
@@ -222,7 +228,7 @@ public class SCIClient {
 
 	/**
 	 * Get the TCP port number used when connecting to the SCI server.
-	 * 
+	 *
 	 * @return The TCP port number to use.
 	 */
 	public int getServerPort() {
@@ -233,7 +239,7 @@ public class SCIClient {
 
 	/**
 	 * Set the TCP port number used when connecting to the SCI server.
-	 * 
+	 *
 	 * @param serverPort
 	 *            The TCP port number to use.
 	 */
@@ -243,7 +249,7 @@ public class SCIClient {
 
 	/**
 	 * Set whether or not the connection to the SCI server should use SSL.
-	 * 
+	 *
 	 * @param serverSecure
 	 *            true if the connection to the SSL server should use SSL.
 	 */
@@ -253,7 +259,7 @@ public class SCIClient {
 
 	/**
 	 * Check if the connection to the SCI server uses SSL.
-	 * 
+	 *
 	 * @return true if the connection uses SSL.
 	 */
 	public boolean isServerSecure() {
@@ -262,7 +268,7 @@ public class SCIClient {
 
 	/**
 	 * Set whether or not HTTP POSTs are allowed to be proxied through us.
-	 * 
+	 *
 	 * @param postAllowed
 	 *            true if POSTs should be allowed.
 	 */
@@ -272,7 +278,7 @@ public class SCIClient {
 
 	/**
 	 * Check if HTTP POSTs are allowed to be proxied through us.
-	 * 
+	 *
 	 * @return true if POSTs are allowed.
 	 */
 	public boolean isPostAllowed() {
@@ -282,7 +288,7 @@ public class SCIClient {
 	/**
 	 * Set the host name of the HTTP proxy server to tunnel the SCI connection
 	 * through.
-	 * 
+	 *
 	 * @param sciProxyHostname
 	 *            the host name to use, or null to use no proxy.
 	 */
@@ -293,7 +299,7 @@ public class SCIClient {
 	/**
 	 * Get the host name of the HTTP proxy server we will tunnel SCI connections
 	 * through.
-	 * 
+	 *
 	 * @return the host name, or null if we are not using a proxy.
 	 */
 	public String getSciProxyHostname() {
@@ -303,7 +309,7 @@ public class SCIClient {
 	/**
 	 * Set the TCP port number of the HTTP proxy server to tunnel the SCI
 	 * connection through.
-	 * 
+	 *
 	 * @param sciProxyPort
 	 *            the sciProxyPort to set
 	 */
@@ -314,7 +320,7 @@ public class SCIClient {
 	/**
 	 * Get the TCP port number of the HTTP proxy server we will tunnel SCI
 	 * connections through.
-	 * 
+	 *
 	 * @return the port number
 	 */
 	public int getSciProxyPort() {
@@ -326,7 +332,7 @@ public class SCIClient {
 	 * this class. Each string in the array should be an RFC-822-style header,
 	 * with no newline or carriage return at the end (e.g.
 	 * "Cookie: UserAuth=12345678").
-	 * 
+	 *
 	 * @param extraHeaders
 	 *            the extra headers to send, or null to not send any
 	 */
@@ -337,7 +343,7 @@ public class SCIClient {
 	/**
 	 * Gets the extra HTTP headers that have been requested to be sent with each
 	 * proxied request.
-	 * 
+	 *
 	 * @return the extra headers, or null if there are none
 	 */
 	public String[] getExtraHeaders() {
@@ -348,7 +354,7 @@ public class SCIClient {
 	 * Sets an extra query string to be sent with each request that is proxied
 	 * through this class. The string should be simply the extra parameter(s) to
 	 * send, with no "?" or trailing or leading "&amp;" (e.g. "a=b" or "a=b&amp;c=d").
-	 * 
+	 *
 	 * @param extraQuery
 	 *            the extra query string to send, or null to send none
 	 */
@@ -359,29 +365,29 @@ public class SCIClient {
 	/**
 	 * Gets the extra query string that will be sent with each request that is
 	 * proxied through this class.
-	 * 
+	 *
 	 * @return the extra query string which will be sent, or null
 	 */
 	public String getExtraQuery() {
 		return extraQuery;
 	}
-	
+
 	/**
 	 * Sets a flag to indicate if the response contains extended information.
 	 * If false, a URL String is returned corresponding to the selected view value
 	 * If true, extended information is returned in a JSON format that can includes
 	 * a categorised breakdown of scores and priorities (if applicable).
-	 *  
+	 *
 	 * @param extendedResponse
 	 *            true or false
 	 */
 	public void setExtendedResponse(boolean extendedResponse) {
 		this.extendedResponse = extendedResponse;
 	}
-	
+
 	/**
 	 * Get the flag that indicates if a simple or extended response will be returned.
-	 * 
+	 *
 	 * @return true or false.
 	 */
 	public boolean getExtendedResponse() {
@@ -391,18 +397,18 @@ public class SCIClient {
 	/**
 	 * Sets a flag to indicate if the test is restricted to parts of the page marked
 	 * by <!-- sitemorse:content --> tags
-	 *  
+	 *
 	 * @param testContent
 	 *            true or false
-	 */	
+	 */
 	public void setTestContent(boolean testContent) {
 		this.testContent = testContent;
 	}
-	
+
 	/**
 	 * Get the flag that indicates if the test is restricted to parts of the page marked
 	 * by <!-- sitemorse:content --> tags
-	 * 
+	 *
 	 * @return true or false.
 	 */
 	public boolean getTestContent() {
@@ -410,11 +416,31 @@ public class SCIClient {
 	}
 
 	/**
+	 * Get the User identifier used with non-legacy licence keys
+	 *
+	 * @return UserID
+	 */
+	public String getUser() {
+		return this.user;
+	}
+
+	/**
+	 * Sets User identifier used with non-legacy licence keys
+	 *
+	 * @param UserID
+	 *
+	 */
+	public void setUser(String user) {
+		this.user = user;
+	}
+
+
+	/**
 	 * Perform a Sitemorse test of the specified URL. Only the specific host
 	 * name identified in the URL itself will be proxied, all other host names
 	 * will be connected to directly by the Sitemorse test server. The
 	 * "snapshot-view" version of the results will be used.
-	 * 
+	 *
 	 * @param url
 	 *            The URL to test.
 	 * @return The URL of the finished report to display to the user.
@@ -428,7 +454,7 @@ public class SCIClient {
 	 * Perform a Sitemorse test of the specified URL. Only the specific host
 	 * name identified in the URL itself will be proxied, all other host names
 	 * will be connected to directly by the Sitemorse test server.
-	 * 
+	 *
 	 * @param url
 	 *            The URL to test.
 	 * @param view
@@ -456,7 +482,7 @@ public class SCIClient {
 	 * names will be proxied via the SCI client. Note that the host name
 	 * indicated by the URL should be included in the host names list. The
 	 * "snapshot-view" version of the results will be used.
-	 * 
+	 *
 	 * @param url
 	 *            The URL to test.
 	 * @param hostNames
@@ -473,7 +499,7 @@ public class SCIClient {
 	 * Perform a Sitemorse test of the specified URL. All the specified host
 	 * names will be proxied via the SCI client. Note that the host name
 	 * indicated by the URL should be included in the host names list.
-	 * 
+	 *
 	 * @param url
 	 *            The URL to test.
 	 * @param hostNames
@@ -544,7 +570,7 @@ public class SCIClient {
 			sciOut = new BufferedWriter(new OutputStreamWriter(
 					sock.getOutputStream(), SCI_CHARSET));
 			line = sciIn.readLine();
-			
+
 			if (line == null)
 				throw new SCIException("SCI server immediately disconnected");
 			if (line.length() < 16 || !line.substring(0, 4).equals("SCI:"))
@@ -568,6 +594,8 @@ public class SCIClient {
                 jsonreq.put("extendedResponse", true);
 			if (this.testContent)
                 jsonreq.put("testContent", true);
+			if (this.user.length() > 0)
+                jsonreq.put("user", user);
 			line = jsonreq.toString();
 			sciOut.write(line.length() + CRLF + line);
 			sciOut.flush();
@@ -597,7 +625,7 @@ public class SCIClient {
 	/**
 	 * Generates the SCI authentication response string, using the configured
 	 * licenceKey and the challenge from the SCI server.
-	 * 
+	 *
 	 * @param challenge
 	 *            Challenge string from server.
 	 * @return Authentication response string.
@@ -622,9 +650,9 @@ public class SCIClient {
 
 	/**
 	 * Convert an array of bytes into a lower-case hexadecimal string
-	 * 
+	 *
 	 * representation.
-	 * 
+	 *
 	 * @param bytes
 	 *            Byte array to convert.
 	 * @return String containing hexadecimal digits.
@@ -645,7 +673,7 @@ public class SCIClient {
 	 * Implements the proxy phase of the SCI protocol. Repeatedly reads requests
 	 * from the SCI server, validates and fulfils them, and returns the results
 	 * to the server. Finishes when the server says the report is complete.
-	 * 
+	 *
 	 * @param sciIn
 	 *            The reader for the SCI server socket.
 	 * @param sciOut
@@ -901,7 +929,7 @@ public class SCIClient {
 	 * takes place within that time-out - otherwise, socket may be null and the
 	 * time-out should be 0. Returns null if the socket closes before the
 	 * end-of-headers marker is reached.
-	 * 
+	 *
 	 * @param sock
 	 *            The underlying socket being read from.
 	 * @param in
@@ -991,15 +1019,17 @@ public class SCIClient {
 	/**
 	 * A test method which allows us to execute this class as an application to
 	 * see it in action.
-	 * 
+	 *
 	 * @param args
-	 *            No arguments are required.
+	 *            arg[0] - licence key
+	 *            arg[1] - url to test
 	 */
 	public static void main(String[] args) {
 		System.out.println("Testing SCI");
 		System.out.println("Creating SCIClient using key: " + args[0]);
+
 		SCIClient client = new SCIClient(args[0]);
-		
+
 		System.out.println("Testing page " + args[1]);
 		// client.setExtendedResponse(true);
 		// client.setTestContent(true);
